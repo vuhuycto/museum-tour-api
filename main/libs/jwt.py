@@ -1,8 +1,19 @@
+import datetime
+import os
+
 import jwt
 from flask import request
 
 from main import config
 from main.commons.exceptions import Unauthorized
+
+
+def generate_nonce():
+    """
+    Generate jti, it is a unique identified that is used to
+    prevent the JWT from being replayed.
+    """
+    return os.urandom(4).hex()
 
 
 def get_jwt_token():
@@ -26,4 +37,12 @@ def verify_jwt_token(token: str):
 
 
 def create_access_token(identity):
-    return jwt.encode({"id": identity}, config.SECRET_KEY, algorithm="HS256")
+    return jwt.encode(
+        {
+            "iss": identity,
+            "iat": datetime.datetime.now().timestamp(),
+            "jti": generate_nonce(),
+        },
+        config.SECRET_KEY,
+        algorithm="HS256",
+    )
